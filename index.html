@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>헬리오드 행운의 룰렛!</title>
+    <!-- 넥슨고딕체 폰트 추가 -->
+    <link href="https://webfontworld.github.io/NexonGothic/NexonGothic.css" rel="stylesheet">
+    <!-- 폭죽 효과를 위한 confetti.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        /* 전체 페이지 스타일링 */
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'NexonGothic', sans-serif;
+        }
+
+        /* 제목 스타일링 */
+        h1 {
+            color: #0f457b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(21, 97, 49, 0.1);
+        }
+
+        /* 룰렛 컨테이너 스타일링 */
+        .roulette-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        /* 룰렛 원판 스타일링 */
+        .roulette-wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: visible;
+            border: 10px solid #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        }
+
+        /* 룰렛 섹션 스타일링 */
+        .roulette-section {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            letter-spacing: 1px;
+            line-height: 1.5;
+            transform: rotate(45deg);
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.2) 100%);
+        }
+
+        /* 룰렛 섹션 호버 효과 */
+        .roulette-section:hover {
+            filter: brightness(1.2);
+        }
+
+        /* 룰렛 섹션 텍스트 스타일 */
+        .roulette-section span {
+            display: inline-block;
+            padding: 10px 15px;
+            background: linear-gradient(145deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6));
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+            transform: rotate(-45deg);
+            font-size: 14px;
+            max-width: 90px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        /* 룰렛 섹션 텍스트 호버 효과 */
+        .roulette-section span:hover {
+            transform: rotate(-45deg) scale(1.05);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* 룰렛 섹션 텍스트 글로우 효과 */
+        .roulette-section span::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .roulette-section span:hover::after {
+            opacity: 1;
+        }
+
+        /* 시작 버튼 스타일링 */
+        .start-button {
+            margin: 20px 0;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'NexonGothic', sans-serif;
+        }
+
+        .start-button:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        /* 결과 표시 영역 스타일링 */
+        .result {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 40px;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 600px) {
+            .roulette-container {
+                width: 250px;
+                height: 250px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .result {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>헬리오드 행운의 룰렛!</h1>
+    <p>버튼을 눌러 행운을 가져가세요</p>
+    
+    <div class="roulette-container">
+        <div class="roulette-wheel" id="rouletteWheel">
+            <!-- 룰렛 섹션들은 JavaScript로 동적 생성됩니다 -->
+        </div>
+    </div>
+
+    <div class="result" id="result"></div>
+    <button class="start-button" id="startButton">시작</button>
+
+    <script>
+        // 룰렛 항목 정의
+        const items = [
+            '자이언트그램 3포',
+            '10% 마일리지',
+            '자이언트그램 5포',
+            '워터 선젤',
+            '무료 커피',
+            '꽝, 한번더!'
+        ];
+
+        // 룰렛 섹션 생성 함수
+        function createRouletteSections() {
+            const wheel = document.getElementById('rouletteWheel');
+            const sectionAngle = 360 / items.length;
+            
+            items.forEach((item, index) => {
+                const section = document.createElement('div');
+                section.className = 'roulette-section';
+                section.style.transform = `rotate(${index * sectionAngle}deg)`;
+                section.style.backgroundColor = `hsl(${index * (360 / items.length)}, 70%, 60%)`;
+                
+                // 텍스트를 span으로 감싸서 추가
+                const textSpan = document.createElement('span');
+                textSpan.textContent = item;
+                section.appendChild(textSpan);
+                
+                wheel.appendChild(section);
+            });
+        }
+
+        // 폭죽 효과 함수
+        function showConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // 룰렛 회전 함수
+        function spinRoulette() {
+            const wheel = document.getElementById('rouletteWheel');
+            const result = document.getElementById('result');
+            const button = document.getElementById('startButton');
+            
+            // 버튼 비활성화
+            button.disabled = true;
+            
+            // 랜덤 각도 계산 (5바퀴 + 랜덤 각도)
+            const randomAngle = 1800 + Math.random() * 360;
+            
+            // 룰렛 회전
+            wheel.style.transform = `rotate(${randomAngle}deg)`;
+            
+            // 5초 후 결과 표시
+            setTimeout(() => {
+                // 당첨 항목 계산
+                const finalAngle = randomAngle % 360;
+                const sectionAngle = 360 / items.length;
+                const winningIndex = Math.floor((360 - finalAngle) / sectionAngle);
+                const winningItem = items[winningIndex];
+                
+                // 결과 표시
+                result.textContent = `축하합니다! ${winningItem}에 당첨되셨습니다!`;
+                
+                // 폭죽 효과
+                showConfetti();
+                
+                // 버튼 다시 활성화
+                button.disabled = false;
+            }, 5000);
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            createRouletteSections();
+            document.getElementById('startButton').addEventListener('click', spinRoulette);
+        });
+    </script>
+</body>
+</html> 
